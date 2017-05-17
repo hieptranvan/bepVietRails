@@ -41,7 +41,7 @@ class Food < ApplicationRecord
     SQL
     select("foods.*, AVG(rates.stars) AS avg_rate")
       .joins(join_sql)
-      .order("avg_rate DESC")
+      .order("avg_rate DESC NULLS LAST")
       .group("foods.id").first(total)
   end
 
@@ -56,7 +56,7 @@ class Food < ApplicationRecord
   class << self
     def suggest target_conditions
       return unless target_conditions && target_conditions.any?
-      conditions = target_conditions.inject([]){|result, tc| result << c = tc.condition unless result.include? c}
+      conditions = target_conditions.inject([]){|result, tc| result << c = tc.condition unless result.include? c}.uniq
       c45 = C45.new FoodTargetCondition.all, conditions
       root = c45.root
       maps = target_conditions.map {|node| {condition_id: node.condition.id, condition_detail_id: node.condition_detail.id}}
